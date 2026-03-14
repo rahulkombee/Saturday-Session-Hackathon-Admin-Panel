@@ -3,7 +3,7 @@ services:
     image: mongo:7
     container_name: saturday-mongo
     ports:
-      - "27017:27017"
+      - "27017:27017"   # host:container – use 27018 to avoid conflict with local MongoDB on 27017
     volumes:
       - mongo_data:/data/db
     healthcheck:
@@ -18,11 +18,11 @@ services:
       dockerfile: Dockerfile
     container_name: saturday-backend
     ports:
-      - "4000:4000"
+      - "4000:4000"   # host 4001 to avoid conflict with local backend on 4000
     environment:
       NODE_ENV: development
       PORT: 4000
-      MONGODB_URI: mongodb://mongo:27017/saturday
+      MONGODB_URI: mongodb+srv://rahulkkombee_db_user:P2wYxHku6712jXEA@cluster0.hci20dt.mongodb.net/saturday-hacathon
       JWT_SECRET: ${JWT_SECRET:-your-access-token-secret-change-in-production}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-refresh-token-secret-change-in-production}
     depends_on:
