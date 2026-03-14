@@ -8,11 +8,13 @@ import {
   MSG_INVALID_CREDENTIALS,
   MSG_VALIDATION_FAILED,
 } from '../constants/index.js';
+import { logger } from '../utils/logger.js';
 
 export async function loginController(req: Request, res: Response): Promise<void> {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
     const message = parsed.error.issues[0]?.message ?? MSG_VALIDATION_FAILED;
+    logger.warn('login_validation_failure', { reason: message });
     sendError(res, message, 400);
     return;
   }
@@ -21,12 +23,14 @@ export async function loginController(req: Request, res: Response): Promise<void
 
   const user = await User.findOne({ email }).select('+password').populate('role', 'name');
   if (!user) {
+    logger.warn('login_failure', { reason: 'user_not_found', email });
     sendError(res, MSG_INVALID_CREDENTIALS, 401);
     return;
   }
 
   const match = await user.comparePassword(password);
   if (!match) {
+    logger.warn('login_failure', { reason: 'invalid_password', email });
     sendError(res, MSG_INVALID_CREDENTIALS, 401);
     return;
   }

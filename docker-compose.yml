@@ -18,13 +18,20 @@ services:
       dockerfile: Dockerfile
     container_name: saturday-backend
     ports:
-      - "4000:4000"   # host 4001 to avoid conflict with local backend on 4000
+      - "4000:4000"
     environment:
       NODE_ENV: development
       PORT: 4000
       MONGODB_URI: mongodb+srv://rahulkkombee_db_user:P2wYxHku6712jXEA@cluster0.hci20dt.mongodb.net/saturday-hacathon
       JWT_SECRET: ${JWT_SECRET:-your-access-token-secret-change-in-production}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-refresh-token-secret-change-in-production}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
+      LOG_PATH: /app/logs/app.log
+    labels:
+      logging: "promtail"
+      logging_env: "backend"
+    volumes:
+      - app_logs:/app/logs
     depends_on:
       mongo:
         condition: service_healthy
@@ -38,8 +45,85 @@ services:
       - "5173:5173"
     environment:
       VITE_API_BASE_URL: http://localhost:4000
+    labels:
+      logging: "promtail"
+      logging_env: "frontend"
     depends_on:
       - backend
 
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: saturday-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: saturday-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:2.3.1
+    container_name: saturday-tempo
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./monitoring/tempo/tempo-config.yml:/etc/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    command: -config.file=/etc/tempo.yaml
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:2.9.2
+    container_name: saturday-promtail
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - app_logs:/var/log/app:ro
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:10.2.2
+    container_name: saturday-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_DEFAULT_THEME: light
+      GF_SERVER_HTTP_PORT: 3000
+      GF_INSTALL_PLUGINS: ""
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+
 volumes:
   mongo_data:
+  app_logs:
+  prometheus_data:
+  loki_data:
+  tempo_data:
+  grafana_data:
