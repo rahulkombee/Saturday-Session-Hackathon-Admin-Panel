@@ -7,6 +7,7 @@ import userRoutes from './user.js';
 import roleRoutes from './role.js';
 import brandRoutes from './brand.js';
 import observabilityRoutes from './observability.js';
+import telemetryRoutes from './telemetry.js';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/users', userRoutes);
 router.use('/roles', roleRoutes);
 router.use('/brands', brandRoutes);
 router.use('/observability', observabilityRoutes);
+router.use('/telemetry', telemetryRoutes);
 
 export default router;

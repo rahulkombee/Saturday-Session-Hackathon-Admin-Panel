@@ -8,6 +8,10 @@ import { ToastProvider } from './components/toast/Toast';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AppRouter } from './routes';
 import './index.css';
+import { initTelemetry } from './utils/telemetry';
+
+// Initialize performance and error tracking
+initTelemetry();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

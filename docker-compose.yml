@@ -32,6 +32,8 @@ services:
       logging_env: "backend"
     volumes:
       - app_logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules
     depends_on:
       mongo:
         condition: service_healthy
@@ -45,9 +47,10 @@ services:
       - "5173:5173"
     environment:
       VITE_API_BASE_URL: http://localhost:4000
-    labels:
-      logging: "promtail"
-      logging_env: "frontend"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
 

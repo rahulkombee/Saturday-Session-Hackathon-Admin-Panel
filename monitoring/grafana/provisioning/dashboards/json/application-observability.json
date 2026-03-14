@@ -1,0 +1,58 @@
+{
+  "title": "Application Observability (Logs & Traces)",
+  "uid": "app-observability",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "🔥 Real-time Backend Logs (Loki)",
+      "type": "logs",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [{ "expr": "{job=\"backend\"}", "refId": "A" }],
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none"
+      }
+    },
+    {
+      "id": 2,
+      "title": "🕵️ Distributed Trace Search (Tempo)",
+      "type": "text",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 12 },
+      "options": {
+        "content": "<div style=\"text-align: center; padding: 20px;\">\n  <h3>Want to debug a specific request?</h3>\n  <a class=\"btn btn-primary\" href=\"/explore?orgId=1&left={\"datasource\":\"tempo\",\"queries\":[{\"refId\":\"A\"}],\"range\":{\"from\":\"now-1h\",\"to\":\"now\"}}\" target=\"_blank\" style=\"background: #3274D9; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none;\">\n    Open Tempo Trace Explorer\n  </a>\n</div>",
+        "mode": "html"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Error Breakdown by Route",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum(increase(http_requests_total{status=~\"[45]..\"}[$__range])) by (route)", "legendFormat": "{{route}}", "refId": "A" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "fixedColor": "red", "mode": "fixed" }
+        }
+      },
+      "options": {
+        "displayMode": "lcd",
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      }
+    }
+  ]
+}

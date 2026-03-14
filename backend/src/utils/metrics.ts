@@ -37,3 +37,19 @@ export function metricsMiddleware(req: Request, res: Response, next: NextFunctio
 
   next();
 }
+
+// Frontend specific metrics
+export const frontendVitals = new Histogram({
+  name: 'frontend_vitals',
+  help: 'Frontend Web Vitals (LCP, FID, CLS, TTFB, FCP) in milliseconds',
+  labelNames: ['metric_name'],
+  buckets: [50, 100, 250, 500, 1000, 2500, 5000, 10000],
+  registers: [register],
+});
+
+export const frontendErrorsTotal = new Counter({
+  name: 'frontend_errors_total',
+  help: 'Total number of frontend errors caught',
+  labelNames: ['message', 'stack'],
+  registers: [register],
+});
