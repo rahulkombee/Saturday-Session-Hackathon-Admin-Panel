@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+/* Class-based dark mode so theme toggle works (default is prefers-color-scheme only) */
+@custom-variant dark (&:where(.dark, .dark *));
